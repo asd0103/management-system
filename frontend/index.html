@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>詩宜管理系統</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #090b0f;
+        --panel: rgba(18, 21, 28, 0.96);
+        --line: rgba(255, 255, 255, 0.08);
+        --text: #ecf2fb;
+        --muted: #98a0ad;
+        --accent: #8fc5f7;
+      }
+      * { box-sizing: border-box; }
+      html, body, #root { height: 100%; margin: 0; }
+      body {
+        background:
+          radial-gradient(circle at 10% 10%, rgba(113, 172, 231, 0.1), transparent 28%),
+          radial-gradient(circle at 88% 78%, rgba(92, 186, 152, 0.12), transparent 22%),
+          var(--bg);
+        color: var(--text);
+        font-family: Inter, "Noto Sans TC", "PingFang TC", sans-serif;
+      }
+      .boot-shell { min-height: 100%; display: grid; place-items: center; padding: 28px; }
+      .boot-card {
+        width: min(720px, 100%);
+        border: 1px solid var(--line);
+        border-radius: 28px;
+        padding: 28px;
+        background: linear-gradient(180deg, rgba(18, 21, 28, 0.98), rgba(11, 13, 18, 0.98));
+        box-shadow: 0 30px 70px rgba(3, 5, 10, 0.45);
+      }
+      .boot-kicker { color: var(--accent); letter-spacing: 0.18em; font-size: 12px; margin-bottom: 12px; }
+      .boot-title { font-size: clamp(28px, 5vw, 42px); line-height: 1.08; margin: 0; }
+      .boot-desc { margin: 14px 0 0; color: var(--muted); line-height: 1.7; }
+      .boot-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+      .boot-btn {
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        padding: 12px 18px;
+        font: inherit;
+        cursor: pointer;
+      }
+      .boot-btn.primary {
+        background: linear-gradient(135deg, rgba(143, 197, 247, 0.22), rgba(143, 197, 247, 0.08));
+        border-color: rgba(143, 197, 247, 0.28);
+      }
+      .boot-error {
+        margin-top: 16px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        border: 1px solid rgba(242, 163, 149, 0.28);
+        background: rgba(242, 163, 149, 0.08);
+        color: #ffd2cb;
+        white-space: pre-wrap;
+        line-height: 1.6;
+      }
+      .boot-hidden { display: none; }
+    </style>
+    <script type="module" crossorigin src="./assets/index-C-4xMKmk.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CRjCmLwk.css">
+  </head>
+  <body>
+    <div id="root">
+      <div class="boot-shell" id="boot-fallback">
+        <div class="boot-card">
+          <div class="boot-kicker">SYSTEM BOOT</div>
+          <h1 class="boot-title">管理系統載入中</h1>
+          <p class="boot-desc" id="boot-desc">如果停很久，畫面會自動切成修復提示，避免整頁黑掉看不到原因。</p>
+          <div class="boot-actions boot-hidden" id="boot-actions">
+            <button class="boot-btn" type="button" onclick="window.location.reload()">重新整理</button>
+            <button class="boot-btn primary" type="button" onclick="window.__shihyiRecover && window.__shihyiRecover()">清除暫存後重開</button>
+          </div>
+          <div class="boot-error boot-hidden" id="boot-error"></div>
+        </div>
+      </div>
+    </div>
+    <script>
+      (function () {
+        function clearShihyiStorage() {
+          try {
+            var keys = [];
+            for (var i = 0; i < window.localStorage.length; i += 1) {
+              var key = window.localStorage.key(i);
+              if (key && key.indexOf('shihyi_') === 0) keys.push(key);
+            }
+            keys.forEach(function (key) { window.localStorage.removeItem(key); });
+          } catch (error) {
+            console.error(error);
+          }
+          window.location.reload();
+        }
+        var fallback = document.getElementById('boot-fallback');
+        var desc = document.getElementById('boot-desc');
+        var errorBox = document.getElementById('boot-error');
+        var actions = document.getElementById('boot-actions');
+        window.__shihyiRecover = clearShihyiStorage;
+        function showFailure(message) {
+          if (!fallback) return;
+          desc.textContent = '我們已經攔下這次錯誤，避免整個畫面直接空白。可以先重新整理；如果是舊暫存造成的，再清掉本機暫存後重建。';
+          errorBox.textContent = message || '管理系統沒有正常載入';
+          errorBox.classList.remove('boot-hidden');
+          actions.classList.remove('boot-hidden');
+        }
+        window.addEventListener('error', function (event) {
+          showFailure(event && event.message ? event.message : '管理系統沒有正常載入');
+        });
+        window.addEventListener('unhandledrejection', function (event) {
+          var reason = event && event.reason;
+          showFailure(reason && reason.message ? reason.message : String(reason || 'Promise 發生未處理錯誤'));
+        });
+        window.setTimeout(function () {
+          var root = document.getElementById('root');
+          if (!root) return;
+          if (root.children.length <= 1) {
+            showFailure('管理系統超過 4 秒仍未完成掛載，可能是入口檔與資產不同步，請重新上傳最新 index.html 與 assets。');
+          }
+        }, 4000);
+      }());
+    </script>
+  </body>
+</html>
